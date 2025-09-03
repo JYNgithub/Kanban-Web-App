@@ -1,0 +1,42 @@
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from database import engine, Base, get_db
+from models import BookDB
+from schemas import Book
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create tables on startup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# GET all books from DB
+@app.get("/books")
+async def get_books(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(BookDB))
+    books = result.scalars().all()
+    return books
+
+# POST a new book to DB
+@app.post("/books")
+async def add_book(book: Book, db: AsyncSession = Depends(get_db)):
+    db_book = BookDB(title=book.title, author=book.author, status=book.status)
+    db.add(db_book)
+    await db.commit()
+    await db.refresh(db_book)
+    return db_book
