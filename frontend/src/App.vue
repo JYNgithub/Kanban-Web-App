@@ -76,6 +76,7 @@
       </div>
       
       <div class="columns-container">
+        <!-- Reading Board-->
         <div class="kanban-column reading-column">
           <div class="column-header">
             <div class="column-icon">📖</div>
@@ -108,9 +109,6 @@
               </template>
             </Draggable>
             
-            <!-- Fixed invisible book at bottom -->
-            <div class="invisible-book-placeholder"></div>
-            
             <div v-if="readingBooks.length === 0" class="empty-state">
               <div class="empty-icon">📚</div>
               <p>Start your reading journey</p>
@@ -118,6 +116,7 @@
           </div>
         </div>
 
+        <!-- Completed -->
         <div class="kanban-column completed-column">
           <div class="column-header">
             <div class="column-icon">✅</div>
@@ -150,12 +149,9 @@
               </template>
             </Draggable>
             
-            <!-- Fixed invisible book at bottom -->
-            <div class="invisible-book-placeholder"></div>
-            
             <div v-if="completedBooks.length === 0" class="empty-state">
               <div class="empty-icon">🏆</div>
-              <p>Your achievements will appear here</p>
+              <p>Every book read is an accomplishment</p>
             </div>
           </div>
         </div>
@@ -273,10 +269,12 @@ body {
   overflow-x: hidden;
 }
 
+/* This shifts everything to the right, mandatory*/
 .container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
+  margin-left: 140px; 
   position: relative;
 }
 
