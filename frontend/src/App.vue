@@ -279,6 +279,7 @@ onMounted(fetchBooks)
 </script>
 
 <style>
+/* Reset and Base Styles */
 * {
   margin: 0;
   padding: 0;
@@ -293,16 +294,16 @@ body {
   overflow-x: hidden;
 }
 
-/* This shifts everything to the right, mandatory*/
+/* Container */
 .container {
   max-width: 1400px;
   margin: 0 auto;
+  margin-left: 140px; /* Mandatory shift */
   padding: 20px;
-  margin-left: 140px; 
   position: relative;
 }
 
-/* Header Styles */
+/* Header */
 .header {
   text-align: center;
   margin-bottom: 60px;
@@ -327,6 +328,10 @@ body {
 }
 
 .title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
   font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 800;
   margin-bottom: 10px;
@@ -334,10 +339,6 @@ body {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
 }
 
 .title .icon {
@@ -354,13 +355,13 @@ body {
 
 /* Add Book Section */
 .add-book {
+  position: relative;
+  padding: 40px;
+  margin-bottom: 60px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
-  padding: 40px;
-  margin-bottom: 60px;
-  position: relative;
   overflow: hidden;
 }
 
@@ -413,7 +414,8 @@ body {
   font-weight: 500;
 }
 
-.modern-input, .modern-select {
+.modern-input,
+.modern-select {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
@@ -424,7 +426,8 @@ body {
   backdrop-filter: blur(10px);
 }
 
-.modern-input:focus, .modern-select:focus {
+.modern-input:focus,
+.modern-select:focus {
   outline: none;
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
@@ -448,21 +451,21 @@ body {
 }
 
 .add-button {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border: none;
-  border-radius: 12px;
-  padding: 16px 24px;
-  color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  position: relative;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .add-button::before {
@@ -506,14 +509,14 @@ body {
 }
 
 .success-message {
-  background: linear-gradient(135deg, #10b981, #34d399);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
   font-weight: 500;
+  color: white;
+  background: linear-gradient(135deg, #10b981, #34d399);
   animation: slideInUp 0.5s ease-out;
 }
 
@@ -549,13 +552,13 @@ body {
 }
 
 .kanban-column {
+  position: relative;
+  padding: 30px;
+  min-height: 500px;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  padding: 30px;
-  min-height: 500px;
-  position: relative;
   transition: all 0.3s ease;
 }
 
@@ -579,25 +582,25 @@ body {
 .column-icon {
   font-size: 1.5rem;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
 }
 
 .column-header h3 {
+  flex: 1;
   font-size: 1.3rem;
   font-weight: 600;
   color: #f8fafc;
-  flex: 1;
 }
 
 .book-counter {
-  background: rgba(255, 255, 255, 0.15);
-  color: #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
   backdrop-filter: blur(10px);
 }
 
@@ -605,22 +608,25 @@ body {
   min-height: 200px;
   border-radius: 16px;
   position: relative;
+  will-change: contents;
 }
 
+/* Book Card */
 .book-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  cursor: move;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  cursor: move;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  will-change: transform;
 }
 
 .book-card:hover {
@@ -635,9 +641,9 @@ body {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #6366f1, transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
+  background: linear-gradient(90deg, transparent, #6366f1, transparent);
 }
 
 .book-card:hover .card-glow {
@@ -655,34 +661,34 @@ body {
 .book-title {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #f8fafc;
   margin-bottom: 6px;
+  color: #f8fafc;
   line-height: 1.4;
 }
 
 .book-author {
-  color: #94a3b8;
   font-size: 0.95rem;
   margin-bottom: 10px;
+  color: #94a3b8;
 }
 
 .book-status {
   display: inline-block;
   padding: 4px 12px;
-  border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 500;
+  border-radius: 20px;
 }
 
 .reading-status {
-  background: rgba(59, 130, 246, 0.2);
   color: #93c5fd;
+  background: rgba(59, 130, 246, 0.2);
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .completed-status {
-  background: rgba(16, 185, 129, 0.2);
   color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.2);
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -690,8 +696,8 @@ body {
   color: #64748b;
   font-size: 1.2rem;
   opacity: 0.5;
-  transition: opacity 0.3s ease;
   cursor: grab;
+  transition: opacity 0.3s ease;
 }
 
 .book-card:hover .drag-handle {
@@ -748,14 +754,8 @@ body {
 }
 
 @keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Transitions */
@@ -768,6 +768,62 @@ body {
 .error-fade-enter-from, .error-fade-leave-to {
   opacity: 0;
   transform: translateY(20px);
+}
+
+/* Drag Loading Styles */
+.drag-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.drag-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.global-loading-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: slideInUp 0.3s ease-out;
+}
+
+.global-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Disable interactions when loading */
+.drag-area.disabled {
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 /* Responsive Design */
@@ -810,73 +866,5 @@ body {
     flex-wrap: wrap;
     gap: 10px;
   }
-}
-
-/* Performance optimizations */
-.book-card {
-  will-change: transform;
-}
-
-.drag-area {
-  will-change: contents;
-}
-
-/* Drag Loading Styles */
-.drag-loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.7);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.drag-loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid #6366f1;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.global-loading-indicator {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #e2e8f0;
-  font-size: 0.9rem;
-  font-weight: 500;
-  z-index: 1000;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  animation: slideInUp 0.3s ease-out;
-}
-
-.global-loading-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid #8b5cf6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* Disable interactions when loading */
-.drag-area.disabled {
-  opacity: 0.7;
-  pointer-events: none;
 }
 </style>
