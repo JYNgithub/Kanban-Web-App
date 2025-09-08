@@ -95,6 +95,7 @@
               ghost-class="ghost-card"
               chosen-class="chosen-card"
               drag-class="drag-card"
+              :disabled="dragLoading"
             >
               <template #item="{ element }">
                 <div class="book-card" :key="element.id">
@@ -105,6 +106,9 @@
                     <div class="book-status reading-status">Currently Reading</div>
                   </div>
                   <div class="drag-handle">⋮⋮</div>
+                  <div v-if="dragLoading && element.id === currentlyDraggingId" class="drag-loading-overlay">
+                    <div class="drag-loading-spinner"></div>
+                  </div>
                 </div>
               </template>
             </Draggable>
@@ -135,6 +139,7 @@
               ghost-class="ghost-card"
               chosen-class="chosen-card"
               drag-class="drag-card"
+              :disabled="dragLoading"
             >
               <template #item="{ element }">
                 <div class="book-card completed-card" :key="element.id">
@@ -145,6 +150,9 @@
                     <div class="book-status completed-status">Completed</div>
                   </div>
                   <div class="drag-handle">⋮⋮</div>
+                  <div v-if="dragLoading && element.id === currentlyDraggingId" class="drag-loading-overlay">
+                    <div class="drag-loading-spinner"></div>
+                  </div>
                 </div>
               </template>
             </Draggable>
@@ -157,6 +165,12 @@
         </div>
       </div>
     </section>
+
+    <!-- Global drag loading indicator -->
+    <div v-if="dragLoading" class="global-loading-indicator">
+      <div class="global-loading-spinner"></div>
+      <span>Updating book status...</span>
+    </div>
   </div>
 </template>
 
@@ -173,6 +187,8 @@ const status = ref('')
 const books = ref([])
 const successMsg = ref('')
 const loading = ref(false)
+const dragLoading = ref(false)
+const currentlyDraggingId = ref(null)
 
 // Computed properties to filter books by status
 const readingBooks = computed({
@@ -233,6 +249,10 @@ const onDrop = async (newStatus, evt) => {
     
     if (oldStatus === newStatus) return
 
+    // Set loading state
+    dragLoading.value = true
+    currentlyDraggingId.value = book.id
+
     try {
       await axios.put(`${API_URL}/books/${book.id}`, {
         ...book,
@@ -247,6 +267,10 @@ const onDrop = async (newStatus, evt) => {
     } catch (err) {
       console.error('Error updating book status:', err)
       await fetchBooks()
+    } finally {
+      // Reset loading state
+      dragLoading.value = false
+      currentlyDraggingId.value = null
     }
   }
 }
@@ -795,5 +819,64 @@ body {
 
 .drag-area {
   will-change: contents;
+}
+
+/* Drag Loading Styles */
+.drag-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.drag-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.global-loading-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 1000;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: slideInUp 0.3s ease-out;
+}
+
+.global-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Disable interactions when loading */
+.drag-area.disabled {
+  opacity: 0.7;
+  pointer-events: none;
 }
 </style>

@@ -48,15 +48,9 @@ async def update_book(book_id: int, book_update: Book, db: AsyncSession = Depend
     db_book = result.scalars().first()
     if not db_book:
         raise HTTPException(status_code=404, detail="Book not found")
-
     # Only update fields that are provided
-    # if book_update.title is not None:
-    #     db_book.title = book_update.title
-    # if book_update.author is not None:
-    #     db_book.author = book_update.author
     if book_update.status is not None:
         db_book.status = book_update.status
-    
     await db.commit()
     await db.refresh(db_book)
     return db_book
