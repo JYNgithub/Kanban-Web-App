@@ -1,0 +1,10 @@
+ProjectWebApp
+- backend
+--- database.py
+--- main.py
+--- models.py
+--- schemas.py
+- frontend
+--- src
+----- App.vue
+--- other Vue files
