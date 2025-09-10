@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from database import engine, Base, get_db
-from models import BookDB
-from schemas import Book
+from models import RecordsDB
+from schemas import Records
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,32 +25,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# GET all books from DB
-@app.get("/books")
-async def get_books(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(BookDB))
-    books = result.scalars().all()
-    return books
+# GET all CRM entries
+@app.get("/crm")
+async def get_crm(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(RecordsDB))
+    crm_entries = result.scalars().all()
+    return crm_entries
 
-# POST a new book to DB
-@app.post("/books")
-async def add_book(book: Book, db: AsyncSession = Depends(get_db)):
-    db_book = BookDB(title=book.title, author=book.author, status=book.status)
-    db.add(db_book)
+# POST a new CRM entry
+@app.post("/crm")
+async def add_crm(entry: Records, db: AsyncSession = Depends(get_db)):
+    db_entry = RecordsDB(**entry.model_dump())
+    db.add(db_entry)
     await db.commit()
-    await db.refresh(db_book)
-    return db_book
+    await db.refresh(db_entry)
+    return db_entry
 
-# Update a book's status (or other fields)
-@app.put("/books/{book_id}")
-async def update_book(book_id: int, book_update: Book, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(BookDB).where(BookDB.id == book_id))
-    db_book = result.scalars().first()
-    if not db_book:
-        raise HTTPException(status_code=404, detail="Book not found")
-    # Only update fields that are provided
-    if book_update.status is not None:
-        db_book.status = book_update.status
+# Update a CRM entry
+@app.put("/crm/{crm_id}")
+async def update_crm(crm_id: int, crm_update: Records, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(RecordsDB).where(RecordsDB.id == crm_id))
+    db_entry = result.scalars().first()
+    if not db_entry:
+        raise HTTPException(status_code=404, detail="CRM entry not found")
+    for field, value in crm_update.dict(exclude_unset=True).items():
+        setattr(db_entry, field, value)
     await db.commit()
-    await db.refresh(db_book)
-    return db_book
+    await db.refresh(db_entry)
+    return db_entry
+
