@@ -1,96 +1,44 @@
 <template>
   <div class="container">
-    <!-- Header with gradient background -->
-    <header class="header">
-      <div class="header-content">
-        <h1 class="title">
-          <span class="icon">📚</span>
-          <span class="text">Reading Tracker</span>
-        </h1>
-        <div class="subtitle">Organize your literary journey</div>
-      </div>
-      <div class="header-decoration"></div>
+
+    <!-- Header -->
+    <header class="app-header">
+      <h1 class="app-title">CRM Kanban Board</h1>
     </header>
 
-    <!-- Add Book Section -->
-    <section class="add-book">
-      <div class="form-header">
-        <h2>Add New Book</h2>
-        <div class="form-decoration"></div>
-      </div>
-      
-      <div class="form-grid">
-        <div class="input-group">
-          <label>Title</label>
-          <input 
-            v-model="title" 
-            placeholder="Enter book title..." 
-            class="modern-input"
-          />
-        </div>
-        
-        <div class="input-group">
-          <label>Author</label>
-          <input 
-            v-model="author" 
-            placeholder="Enter author name..." 
-            class="modern-input"
-          />
-        </div>
-        
-        <div class="input-group">
-          <label>Status</label>
-          <select v-model="status" class="modern-select">
-            <option value="">Choose status</option>
-            <option value="Reading">📖 Currently Reading</option>
-            <option value="Completed">✅ Completed</option>
-          </select>
-        </div>
-        
-        <div class="button-group">
-          <button 
-            :disabled="loading || !title || !author || !status" 
-            @click="addBook"
-            class="add-button"
-          >
-            <span v-if="loading" class="loading-spinner"></span>
-            <span v-else class="button-icon">+</span>
-            {{ loading ? 'Adding...' : 'Add Book' }}
-          </button>
-          
-          <transition name="success-fade">
-            <div v-if="successMsg" class="success-message">
-              <span class="success-icon">✨</span>
-              {{ successMsg }}
-            </div>
-          </transition>
-        </div>
+    <!-- Action Section -->
+    <section class="action-section">
+      <div class="action-container">
+        <!-- Add Record Button -->
+        <button 
+          @click="showAddModal = true" 
+          class="add-record-btn"
+          :disabled="loading"
+        >
+          <div class="btn-icon">+</div>
+          <span>Add Record</span>
+        </button>
       </div>
     </section>
-
+    
     <!-- Kanban Board -->
     <section class="kanban-board">
-      <div class="board-header">
-        <h2>Your Library</h2>
-        <div class="book-count">{{ books.length }} books total</div>
-      </div>
-      
       <div class="columns-container">
-        <!-- Reading Board-->
-        <div class="kanban-column reading-column">
+        <!-- New Records -->
+        <div class="kanban-column new-column">
           <div class="column-header">
-            <div class="column-icon">📖</div>
-            <h3>Currently Reading</h3>
-            <div class="book-counter">{{ readingBooks.length }}</div>
+            <div class="column-icon">🆕</div>
+            <h3>New</h3>
+            <div class="record-counter">{{ newRecords.length }}</div>
           </div>
           
           <div class="column-content">
             <Draggable
-              :list="readingBooks"
-              :group="{ name: 'books', pull: true, put: true }"
+              :list="newRecords"
+              :group="{ name: 'records', pull: true, put: true }"
               item-key="id"
               :animation="300"
-              @change="onDrop('Reading', $event)"
+              @change="onDrop('New', $event)"
               class="drag-area"
               ghost-class="ghost-card"
               chosen-class="chosen-card"
@@ -98,14 +46,18 @@
               :disabled="dragLoading"
             >
               <template #item="{ element }">
-                <div class="book-card" :key="element.id">
+                <div 
+                  class="record-card" 
+                  :key="element.id"
+                  @click="openRecordDetails(element)"
+                >
                   <div class="card-glow"></div>
-                  <div class="book-content">
-                    <div class="book-title">{{ element.title }}</div>
-                    <div class="book-author">{{ element.author }}</div>
-                    <div class="book-status reading-status">Currently Reading</div>
+                  <div class="record-content">
+                    <div class="record-name">{{ element.name }}</div>
+                    <div class="record-phone">{{ element.phone_number }}</div>
+                    <div class="record-status new-status">New</div>
                   </div>
-                  <div class="drag-handle">⋮⋮</div>
+                  <div class="drag-handle" @click.stop>⋮⋮</div>
                   <div v-if="dragLoading && element.id === currentlyDraggingId" class="drag-loading-overlay">
                     <div class="drag-loading-spinner"></div>
                   </div>
@@ -113,28 +65,28 @@
               </template>
             </Draggable>
             
-            <div v-if="readingBooks.length === 0" class="empty-state">
-              <div class="empty-icon">📚</div>
-              <p>Start your reading journey</p>
+            <div v-if="newRecords.length === 0" class="empty-state">
+              <div class="empty-icon">📂</div>
+              <p>No new records</p>
             </div>
           </div>
         </div>
 
-        <!-- Completed -->
-        <div class="kanban-column completed-column">
+        <!-- Active Records -->
+        <div class="kanban-column active-column">
           <div class="column-header">
-            <div class="column-icon">✅</div>
-            <h3>Completed</h3>
-            <div class="book-counter">{{ completedBooks.length }}</div>
+            <div class="column-icon">📋</div>
+            <h3>Active</h3>
+            <div class="record-counter">{{ activeRecords.length }}</div>
           </div>
           
           <div class="column-content">
             <Draggable
-              :list="completedBooks"
-              :group="{ name: 'books', pull: true, put: true }"
+              :list="activeRecords"
+              :group="{ name: 'records', pull: true, put: true }"
               item-key="id"
               :animation="300"
-              @change="onDrop('Completed', $event)"
+              @change="onDrop('Active', $event)"
               class="drag-area"
               ghost-class="ghost-card"
               chosen-class="chosen-card"
@@ -142,14 +94,18 @@
               :disabled="dragLoading"
             >
               <template #item="{ element }">
-                <div class="book-card completed-card" :key="element.id">
+                <div 
+                  class="record-card" 
+                  :key="element.id"
+                  @click="openRecordDetails(element)"
+                >
                   <div class="card-glow"></div>
-                  <div class="book-content">
-                    <div class="book-title">{{ element.title }}</div>
-                    <div class="book-author">{{ element.author }}</div>
-                    <div class="book-status completed-status">Completed</div>
+                  <div class="record-content">
+                    <div class="record-name">{{ element.name }}</div>
+                    <div class="record-phone">{{ element.phone_number }}</div>
+                    <div class="record-status active-status">Active</div>
                   </div>
-                  <div class="drag-handle">⋮⋮</div>
+                  <div class="drag-handle" @click.stop>⋮⋮</div>
                   <div v-if="dragLoading && element.id === currentlyDraggingId" class="drag-loading-overlay">
                     <div class="drag-loading-spinner"></div>
                   </div>
@@ -157,349 +113,758 @@
               </template>
             </Draggable>
             
-            <div v-if="completedBooks.length === 0" class="empty-state">
-              <div class="empty-icon">🏆</div>
-              <p>Every book read is an accomplishment</p>
+            <div v-if="activeRecords.length === 0" class="empty-state">
+              <div class="empty-icon">📂</div>
+              <p>No active records</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Closed Records -->
+        <div class="kanban-column closed-column">
+          <div class="column-header">
+            <div class="column-icon">✅</div>
+            <h3>Closed</h3>
+            <div class="record-counter">{{ closedRecords.length }}</div>
+          </div>
+          
+          <div class="column-content">
+            <Draggable
+              :list="closedRecords"
+              :group="{ name: 'records', pull: true, put: true }"
+              item-key="id"
+              :animation="300"
+              @change="onDrop('Closed', $event)"
+              class="drag-area"
+              ghost-class="ghost-card"
+              chosen-class="chosen-card"
+              drag-class="drag-card"
+              :disabled="dragLoading"
+            >
+              <template #item="{ element }">
+                <div 
+                  class="record-card closed-card" 
+                  :key="element.id"
+                  @click="openRecordDetails(element)"
+                >
+                  <div class="card-glow"></div>
+                  <div class="record-content">
+                    <div class="record-name">{{ element.name }}</div>
+                    <div class="record-phone">{{ element.phone_number }}</div>
+                    <div class="record-status closed-status">Closed</div>
+                  </div>
+                  <div class="drag-handle" @click.stop>⋮⋮</div>
+                  <div v-if="dragLoading && element.id === currentlyDraggingId" class="drag-loading-overlay">
+                    <div class="drag-loading-spinner"></div>
+                  </div>
+                </div>
+              </template>
+            </Draggable>
+            
+            <div v-if="closedRecords.length === 0" class="empty-state">
+              <div class="empty-icon">📂</div>
+              <p>No closed records</p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Global drag loading indicator -->
+    <!-- HTML logic: Global drag loading indicator -->
     <div v-if="dragLoading" class="global-loading-indicator">
       <div class="global-loading-spinner"></div>
-      <span>Updating book status...</span>
+      <span>Updating status...</span>
+    </div>
+
+    <!-- HTML logic: Modal form for add records -->
+    <div v-if="showAddModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <!-- Add loading overlay inside modal -->
+        <div v-if="loading" class="modal-loading-overlay">
+          <div class="modal-loading-spinner"></div>
+          <span>Adding record...</span>
+        </div>
+        
+        <div :class="['modal-content-inner', { 'blurred': loading }]">
+          <div class="modal-header">
+            <h2>Add New Record</h2>
+            <button @click="closeModal" class="close-btn" :disabled="loading">&times;</button>
+          </div>
+          
+          <form @submit.prevent="addRecord" class="record-form">
+            <!-- Add the missing form fields -->
+            <div class="form-group">
+              <label for="name">Name *</label>
+              <input 
+                type="text" 
+                id="name"
+                v-model="name" 
+                placeholder="Enter full name"
+                required
+                :disabled="loading"
+                autocomplete="off"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input 
+                type="email" 
+                id="email"
+                v-model="email" 
+                placeholder="Enter email address"
+                required
+                :disabled="loading"
+                autocomplete="off"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="phone">Phone Number *</label>
+              <input 
+                type="tel" 
+                id="phone"
+                v-model="phone_number" 
+                placeholder="Enter phone number"
+                required
+                :disabled="loading"
+                autocomplete="off"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="organization">Organization *</label>
+              <input 
+                type="text" 
+                id="organization"
+                v-model="organization" 
+                placeholder="Enter organization name"
+                required
+                :disabled="loading"
+                autocomplete="off"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="status">Status *</label>
+              <select 
+                id="status"
+                v-model="status" 
+                required
+                :disabled="loading"
+                autocomplete="off"
+              >
+                <option value="">Select status</option>
+                <option value="New">New</option>
+                <option value="Active">Active</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea 
+                id="description"
+                v-model="description" 
+                placeholder="Enter additional details"
+                rows="3"
+                :disabled="loading"
+                autocomplete="off"
+              ></textarea>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" @click="closeModal" class="cancel-btn" :disabled="loading">
+                Cancel
+              </button>
+              <button type="submit" class="submit-btn" :disabled="loading">
+                Add
+              </button>
+            </div>
+            
+            <!-- Only show error message, success will close modal immediately -->
+            <div v-if="errorMsg" class="error-message">
+              {{ errorMsg }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTML logic: Record Details Modal -->
+    <div v-if="showRecordDetails" class="modal-overlay" @click="closeRecordDetails">
+      <div class="modal-content record-details-modal" @click.stop>
+        <div class="modal-header">
+          <h2>Record Details</h2>
+          <button @click="closeRecordDetails" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="record-details-content">
+          <div class="detail-row">
+            <span class="detail-label">Name:</span>
+            <span class="detail-value">{{ selectedRecord.name }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ selectedRecord.email }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Phone:</span>
+            <span class="detail-value">{{ selectedRecord.phone_number }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Organization:</span>
+            <span class="detail-value">{{ selectedRecord.organization }}</span>
+          </div>
+          
+          <div class="detail-row">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value">
+              <span :class="['status-badge', getStatusClass(selectedRecord.status)]">
+                {{ selectedRecord.status }}
+              </span>
+            </span>
+          </div>
+          
+          <div class="detail-row full-width" v-if="selectedRecord.description">
+            <span class="detail-label">Description:</span>
+            <span class="detail-value">{{ selectedRecord.description }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import axios from 'axios'
 import Draggable from 'vuedraggable'
 
 const API_URL = 'http://127.0.0.1:8000'
 
-const title = ref('')
-const author = ref('')
+const name = ref('')
+const email = ref('')
+const phone_number = ref('')
+const organization = ref('')
+const description = ref('')
 const status = ref('')
-const books = ref([])
+const records = ref([])
 const successMsg = ref('')
+const errorMsg = ref('') // Add error message ref
 const loading = ref(false)
 const dragLoading = ref(false)
 const currentlyDraggingId = ref(null)
+const showAddModal = ref(false)
+const showRecordDetails = ref(false)
+const selectedRecord = ref({})
 
-// Computed properties to filter books by status
-const readingBooks = computed({
+// Computed properties to filter records by status
+const newRecords = computed({
   get() {
-    return books.value.filter(book => book.status === 'Reading')
+    return records.value.filter(r => r.status === 'New')
   },
-  set(newBooks) {
-    const otherBooks = books.value.filter(book => book.status !== 'Reading')
-    books.value = [...otherBooks, ...newBooks]
+  set(newRecords) {
+    const others = records.value.filter(r => r.status !== 'New')
+    records.value = [...others, ...newRecords]
   }
 })
 
-const completedBooks = computed({
+const activeRecords = computed({
   get() {
-    return books.value.filter(book => book.status === 'Completed')
+    return records.value.filter(r => r.status === 'Active')
   },
-  set(newBooks) {
-    const otherBooks = books.value.filter(book => book.status !== 'Completed')
-    books.value = [...otherBooks, ...newBooks]
+  set(newRecords) {
+    const others = records.value.filter(r => r.status !== 'Active')
+    records.value = [...others, ...newRecords]
   }
 })
 
-const fetchBooks = async () => {
+const closedRecords = computed({
+  get() {
+    return records.value.filter(r => r.status === 'Closed')
+  },
+  set(newRecords) {
+    const others = records.value.filter(r => r.status !== 'Closed')
+    records.value = [...others, ...newRecords]
+  }
+})
+
+const checkHorizontalScroll = () => {
+  nextTick(() => {
+    const container = document.querySelector('.container')
+    const body = document.body
+    if (container) {
+      const containerWidth = container.scrollWidth
+      const viewportWidth = window.innerWidth
+      if (containerWidth > viewportWidth) {
+        body.style.overflowX = 'auto'
+        body.style.minWidth = containerWidth + 'px'
+      } else {
+        body.style.overflowX = 'hidden'
+        body.style.minWidth = '100vw'
+      }
+    }
+  })
+}
+
+const fetchRecords = async () => {
   try {
-    const { data } = await axios.get(`${API_URL}/books`)
-    books.value = data
+    const { data } = await axios.get(`${API_URL}/crm`)
+    records.value = data
+    checkHorizontalScroll()
   } catch (err) {
-    console.error('Error fetching books:', err)
+    console.error('Error fetching records:', err)
   }
 }
 
-const addBook = async () => {
-  if (!title.value || !author.value || !status.value) return
+const addRecord = async () => {
+  if (!name.value || !email.value || !phone_number.value || !organization.value || !status.value) return
+  
   loading.value = true
+  errorMsg.value = '' // Clear any previous errors
+  
   try {
-    await axios.post(`${API_URL}/books`, {
-      title: title.value,
-      author: author.value,
+    await axios.post(`${API_URL}/crm`, {
+      user_id: 1,
+      name: name.value,
+      email: email.value,
+      phone_number: phone_number.value,
+      organization: organization.value,
+      description: description.value,
       status: status.value
     })
-    successMsg.value = 'Book added successfully!'
-    title.value = ''
-    author.value = ''
+    
+    // Refresh records
+    await fetchRecords()
+    
+    // Clear form
+    name.value = ''
+    email.value = ''
+    phone_number.value = ''
+    organization.value = ''
+    description.value = ''
     status.value = ''
-    await fetchBooks()
-    setTimeout(() => (successMsg.value = ''), 3000)
+    
+    // Close modal immediately on success
+    showAddModal.value = false
+    
   } catch (err) {
-    console.error('Error adding book:', err)
+    console.error('Error adding record:', err)
+    errorMsg.value = 'Failed to add record. Please try again.'
   } finally {
     loading.value = false
   }
 }
 
+const closeModal = () => {
+  if (loading.value) return // Prevent closing while loading
+  
+  showAddModal.value = false
+  successMsg.value = ''
+  errorMsg.value = ''
+}
+
+const openRecordDetails = (record) => {
+  selectedRecord.value = { ...record }
+  showRecordDetails.value = true
+}
+
+const closeRecordDetails = () => {
+  showRecordDetails.value = false
+  selectedRecord.value = {}
+}
+
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'New': return 'new-status'
+    case 'Active': return 'active-status'
+    case 'Closed': return 'closed-status'
+    default: return ''
+  }
+}
+
 const onDrop = async (newStatus, evt) => {
   if (evt.added) {
-    const book = evt.added.element
-    const oldStatus = book.status
-    
+    const record = evt.added.element
+    const oldStatus = record.status
     if (oldStatus === newStatus) return
 
-    // Set loading state
     dragLoading.value = true
-    currentlyDraggingId.value = book.id
+    currentlyDraggingId.value = record.id
 
     try {
-      await axios.put(`${API_URL}/books/${book.id}`, {
-        ...book,
+      await axios.put(`${API_URL}/crm/${record.id}`, {
+        ...record,
         status: newStatus
       })
-      
-      const bookIndex = books.value.findIndex(b => b.id === book.id)
-      if (bookIndex !== -1) {
-        books.value[bookIndex].status = newStatus
+      const idx = records.value.findIndex(r => r.id === record.id)
+      if (idx !== -1) {
+        records.value[idx].status = newStatus
       }
-      
+      checkHorizontalScroll()
     } catch (err) {
-      console.error('Error updating book status:', err)
-      await fetchBooks()
+      console.error('Error updating record status:', err)
+      await fetchRecords()
     } finally {
-      // Reset loading state
       dragLoading.value = false
       currentlyDraggingId.value = null
     }
   }
 }
 
-onMounted(fetchBooks)
+onMounted(() => {
+  fetchRecords()
+  checkHorizontalScroll()
+  window.addEventListener('resize', checkHorizontalScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkHorizontalScroll)
+})
 </script>
 
 <style>
-/* Reset and Base Styles */
+/* Base Styles */
 * {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
+/* Background */
 body {
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  background-attachment: fixed;
+  background-size: 100vw 100vh;
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: #ffffff;
-  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-/* Container */
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  margin-left: 140px; /* Mandatory shift */
-  padding: 20px;
-  position: relative;
+body::-webkit-scrollbar {
+  height: 8px;
 }
 
-/* Header */
-.header {
-  text-align: center;
-  margin-bottom: 60px;
-  position: relative;
-  padding: 40px 0;
+body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.header-decoration {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #6366f1, #8b5cf6, transparent);
-  border-radius: 1px;
+body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
 }
 
-.header-content {
-  position: relative;
-  z-index: 1;
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.6);
 }
 
-.title {
+/* Firefox scrollbar styling for body */
+body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.1);
+}
+
+/* Action Section */
+.action-section {
+  margin-top: 20px;
+  padding: 20px 0;
+}
+
+.action-container {
+  display: flex;
+  justify-content: flex-start;
+  width: max-content;
+  min-width: 100%;
+  padding: 0 20px;
+}
+
+.add-record-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  backdrop-filter: blur(10px);
+  position: static; /* Remove fixed positioning */
+  transform: none; /* Remove fixed positioning transforms */
+}
+
+.add-record-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+}
+
+.add-record-btn:active {
+  transform: translateY(0);
+}
+
+.add-record-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .action-section {
+    margin-top: 20px;
+    padding: 15px 0;
+  }
+  
+  .action-container {
+    padding: 0 10px;
+  }
+  
+  .add-record-btn {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 800;
-  margin-bottom: 10px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideInUp 0.3s ease-out;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 30px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f8fafc;
+  background: linear-gradient(135deg, #f8fafc, #cbd5e1);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.title .icon {
-  font-size: 0.8em;
-  animation: float 3s ease-in-out infinite;
-}
-
-.subtitle {
-  font-size: 1.2rem;
-  color: #94a3b8;
-  font-weight: 300;
-  letter-spacing: 0.5px;
-}
-
-/* Add Book Section */
-.add-book {
-  position: relative;
-  padding: 40px;
-  margin-bottom: 60px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  overflow: hidden;
-}
-
-.add-book::before {
-  content: '';
+/* Add modal loading overlay styles */
+.modal-loading-overlay {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 20px;
+  color: #e2e8f0;
+  font-weight: 500;
+  gap: 16px;
 }
 
-.form-header {
-  margin-bottom: 30px;
-  text-align: center;
+.modal-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-.form-header h2 {
+.modal-content-inner {
+  transition: filter 0.3s ease;
+}
+
+.modal-content-inner.blurred {
+  filter: blur(2px);
+}
+
+.close-btn {
+  background: none;
+  border: none;
   font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 10px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: #f8fafc;
 }
 
-.form-decoration {
-  width: 60px;
-  height: 2px;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
-  margin: 0 auto;
-  border-radius: 1px;
+/* Form Styles */
+.record-form {
+  padding: 30px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 20px;
-  align-items: end;
+.form-group {
+  margin-bottom: 20px;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.input-group label {
-  font-size: 0.9rem;
-  color: #cbd5e1;
+.form-group label {
+  display: block;
   margin-bottom: 8px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 0.9rem;
 }
 
-.modern-input,
-.modern-select {
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
-  padding: 16px 20px;
-  color: #ffffff;
-  font-size: 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #f8fafc;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
   backdrop-filter: blur(10px);
 }
 
-.modern-input:focus,
-.modern-select:focus {
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
   outline: none;
   border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
   background: rgba(255, 255, 255, 0.12);
-  transform: translateY(-2px);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
-.modern-input::placeholder {
-  color: #64748b;
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #94a3b8;
 }
 
-.modern-select option {
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group select {
+  cursor: pointer;
+}
+
+.form-group select option {
   background: #1e293b;
-  color: #ffffff;
+  color: #f8fafc;
 }
 
-.button-group {
+/* Form Actions */
+.form-actions {
   display: flex;
-  flex-direction: column;
   gap: 15px;
+  margin-top: 30px;
 }
 
-.add-button {
-  position: relative;
+.cancel-btn,
+.submit-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: none;
-  border-radius: 12px;
-  padding: 16px 24px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
   color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.add-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s;
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
-.add-button:hover:not(:disabled)::before {
-  left: 100%;
-}
-
-.add-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
-}
-
-.add-button:disabled {
-  background: rgba(100, 116, 139, 0.3);
+.submit-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-.button-icon {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.loading-spinner {
+.btn-loading-spinner {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -508,65 +873,171 @@ body {
   animation: spin 1s linear infinite;
 }
 
+/* Success Message */
 .success-message {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 12px;
+  color: #6ee7b7;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: white;
-  background: linear-gradient(135deg, #10b981, #34d399);
-  animation: slideInUp 0.5s ease-out;
-}
-
-/* Kanban Board */
-.kanban-board {
-  margin-top: 60px;
-}
-
-.board-header {
   text-align: center;
-  margin-bottom: 40px;
+  animation: slideInUp 0.3s ease-out;
 }
 
-.board-header h2 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 10px;
+/* Error message */
+.error-message {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #fca5a5;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  animation: slideInUp 0.3s ease-out;
+}
+
+/* Header Styles */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 15px 0;
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 100;
+}
+
+.app-title {
+  margin-left: 20px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #f8fafc;
   background: linear-gradient(135deg, #f8fafc, #cbd5e1);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.book-count {
+/* Container */
+.container {
+  width: max-content;
+  min-width: 100vw;
+  margin: 0;
+  position: relative;
+  padding: 0;
+}
+
+/* Kanban Board */
+.kanban-board {
+  margin-top: 20px;
+  width: max-content;
+  min-width: 100vw;
+}
+
+.board-header {
+  text-align: center;
+  margin-bottom: 0px;
+}
+
+.board-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0px;
+  background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.record-count {
   color: #94a3b8;
   font-size: 1.1rem;
 }
 
+/* Container of All Kanban */
 .columns-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 20px;
+  overflow: visible;
+  padding: 10px;
+  width: max-content;
+  min-width: 1000px;
 }
 
+/* Individual Kanban Boards */
 .kanban-column {
   position: relative;
-  padding: 30px;
+  padding: 12px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  flex-shrink: 0;
+  flex-grow: 0;
   min-height: 500px;
-  border-radius: 24px;
+  border-radius: 0px;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
 }
 
-.reading-column {
+@media (min-width: 1200px) {
+  .kanban-column {
+    width: 380px;
+    min-width: 380px;
+  }
+  
+  .columns-container {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .kanban-column {
+    width: 280px;
+    min-width: 280px;
+    padding: 10px;
+  }
+  
+  .columns-container {
+    gap: 15px;
+    padding: 5px;
+  }
+  
+  .add-record-btn {
+    top: 70px;
+    left: 10px;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .record-form {
+    padding: 20px;
+  }
+}
+
+.new-column {
+  border-top: 3px solid #f6c43b;
+}
+
+.active-column {
   border-top: 3px solid #3b82f6;
 }
 
-.completed-column {
+.closed-column {
   border-top: 3px solid #10b981;
 }
 
@@ -582,9 +1053,6 @@ body {
 .column-icon {
   font-size: 1.5rem;
   padding: 10px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
 }
 
 .column-header h3 {
@@ -594,7 +1062,7 @@ body {
   color: #f8fafc;
 }
 
-.book-counter {
+.record-counter {
   font-size: 0.9rem;
   font-weight: 500;
   padding: 6px 12px;
@@ -611,8 +1079,8 @@ body {
   will-change: contents;
 }
 
-/* Book Card */
-.book-card {
+/* Record Card */
+.record-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -629,7 +1097,7 @@ body {
   will-change: transform;
 }
 
-.book-card:hover {
+.record-card:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 255, 255, 0.2);
@@ -646,19 +1114,19 @@ body {
   background: linear-gradient(90deg, transparent, #6366f1, transparent);
 }
 
-.book-card:hover .card-glow {
+.record-card:hover .card-glow {
   opacity: 1;
 }
 
-.completed-card .card-glow {
+.closed-card .card-glow {
   background: linear-gradient(90deg, transparent, #10b981, transparent);
 }
 
-.book-content {
+.record-content {
   flex: 1;
 }
 
-.book-title {
+.record-name {
   font-weight: 700;
   font-size: 1.1rem;
   margin-bottom: 6px;
@@ -666,13 +1134,13 @@ body {
   line-height: 1.4;
 }
 
-.book-author {
+.record-phone {
   font-size: 0.95rem;
   margin-bottom: 10px;
   color: #94a3b8;
 }
 
-.book-status {
+.record-status {
   display: inline-block;
   padding: 4px 12px;
   font-size: 0.8rem;
@@ -680,13 +1148,19 @@ body {
   border-radius: 20px;
 }
 
-.reading-status {
+.new-status {
+  color: #fce21b;
+  background: rgba(251, 238, 180, 0.226);
+  border: 1px solid rgba(218, 255, 148, 0.3);
+}
+
+.active-status {
   color: #93c5fd;
   background: rgba(59, 130, 246, 0.2);
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
-.completed-status {
+.closed-status {
   color: #6ee7b7;
   background: rgba(16, 185, 129, 0.2);
   border: 1px solid rgba(16, 185, 129, 0.3);
@@ -700,7 +1174,7 @@ body {
   transition: opacity 0.3s ease;
 }
 
-.book-card:hover .drag-handle {
+.record-card:hover .drag-handle {
   opacity: 1;
 }
 
@@ -756,6 +1230,11 @@ body {
 @keyframes slideInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Transitions */
@@ -826,45 +1305,71 @@ body {
   pointer-events: none;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .form-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .button-group {
-    grid-column: 1 / -1;
-  }
+/* Record Details Modal Styles */
+.record-details-modal {
+  max-width: 600px;
 }
 
-@media (max-width: 900px) {
-  .columns-container {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
-  
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
+.record-details-content {
+  padding: 25px 30px;
 }
 
-@media (max-width: 600px) {
-  .container {
-    padding: 15px;
-  }
-  
-  .add-book, .kanban-column {
-    padding: 20px;
-  }
-  
-  .title {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .column-header {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+.detail-row {
+  display: flex;
+  margin-bottom: 20px;
+  align-items: flex-start;
 }
+
+.detail-row.full-width {
+  flex-direction: column;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #e2e8f0;
+  min-width: 120px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  color: #f8fafc;
+  flex: 1;
+  word-break: break-word;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 20px;
+}
+
+.detail-actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Ensure drag handle is still functional */
+.drag-handle {
+  cursor: grab;
+  z-index: 2; /* Ensure it's above the clickable area */
+}
+
+.record-card {
+  cursor: pointer;
+  position: relative;
+}
+
+/* Make sure the entire card is clickable except the drag handle */
+.record-card > *:not(.drag-handle) {
+  pointer-events: none;
+}
+
+.record-card .drag-handle {
+  pointer-events: auto;
+}
+
 </style>
