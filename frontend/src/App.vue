@@ -27,7 +27,7 @@
         <!-- New Records -->
         <div class="kanban-column new-column">
           <div class="column-header">
-            <div class="column-icon">🆕</div>
+            <div class="column-icon">✨</div>
             <h3>New</h3>
             <div class="record-counter">{{ newRecords.length }}</div>
           </div>
@@ -413,7 +413,9 @@ const checkHorizontalScroll = () => {
 
 const fetchRecords = async () => {
   try {
-    const { data } = await axios.get(`${API_URL}/crm`)
+    const token = localStorage.getItem('access_token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const { data } = await axios.get(`${API_URL}/crm`, { headers })
     records.value = data
     checkHorizontalScroll()
   } catch (err) {
@@ -428,6 +430,8 @@ const addRecord = async () => {
   errorMsg.value = '' // Clear any previous errors
   
   try {
+    const token = localStorage.getItem('access_token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
     await axios.post(`${API_URL}/crm`, {
       user_id: 1,
       name: name.value,
@@ -436,7 +440,7 @@ const addRecord = async () => {
       organization: organization.value,
       description: description.value,
       status: status.value
-    })
+    }, { headers })
     
     // Refresh records
     await fetchRecords()
@@ -497,10 +501,14 @@ const onDrop = async (newStatus, evt) => {
     currentlyDraggingId.value = record.id
 
     try {
+      const token = localStorage.getItem('access_token')
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      
       await axios.put(`${API_URL}/crm/${record.id}`, {
         ...record,
         status: newStatus
-      })
+      }, { headers })
+      
       const idx = records.value.findIndex(r => r.id === record.id)
       if (idx !== -1) {
         records.value[idx].status = newStatus
@@ -1371,5 +1379,4 @@ body {
 .record-card .drag-handle {
   pointer-events: auto;
 }
-
 </style>
