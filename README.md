@@ -1,4 +1,6 @@
 # TODO
-1. ~~Add login page~~
-2. Fix CSS scope
-2. Add JS to check server health
+1. Fix CSS scope + Overall design
+2. Forgot password feature
+3. Edit records feature
+4. Rework add record button design
+5. Add JS to check server health
