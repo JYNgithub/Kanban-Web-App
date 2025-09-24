@@ -16,21 +16,27 @@ from database import engine, Base, get_db
 from models import RecordsDB, UserDB
 from schemas import Records, User, Token
 
+#--------------------------------------------------------
+# Configuration & Initialization
+#--------------------------------------------------------
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Setup encryption and authentication
 load_dotenv()
 ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+# Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)  # Don't auto error for optional auth
 
+# Lifespan event to create tables
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables on startup
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
@@ -40,9 +46,10 @@ async def lifespan(app: FastAPI):
         raise
     yield
 
+# Initialize FastAPI app
 app = FastAPI(title="CRM Kanban API", version="1.0.0", lifespan=lifespan)
 
-# CORS - be more specific in production
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
@@ -51,12 +58,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+#--------------------------------------------------------
+# Utility functions
+#--------------------------------------------------------
+
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, ENCRYPTION_KEY, algorithm=ALGORITHM)
 
+# Dependency to get current user from token
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     if not credentials:
         raise HTTPException(
@@ -84,6 +96,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+#--------------------------------------------------------
+# API Endpoints
+#--------------------------------------------------------
+
+# Register a new user
 @app.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(user: User, db: AsyncSession = Depends(get_db)):
     logger.info(f"Registration attempt for email: {user.email}")
@@ -125,6 +142,7 @@ async def register(user: User, db: AsyncSession = Depends(get_db)):
             detail="Internal server error"
         )
 
+# Login for user
 @app.post("/login", response_model=Token)
 async def login(user: User, db: AsyncSession = Depends(get_db)):
     logger.info(f"Login attempt for email: {user.email}")
@@ -163,7 +181,7 @@ async def login(user: User, db: AsyncSession = Depends(get_db)):
             detail="Internal server error"
         )
 
-# GET all CRM entries
+# Get all CRM records
 @app.get("/crm")
 async def get_crm(db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
     try:
@@ -178,7 +196,7 @@ async def get_crm(db: AsyncSession = Depends(get_db), current_user = Depends(get
             detail="Failed to fetch records"
         )
 
-# POST a new CRM entry
+# Add a new CRM record
 @app.post("/crm", status_code=status.HTTP_201_CREATED)
 async def add_crm(entry: Records, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
     try:
@@ -199,7 +217,7 @@ async def add_crm(entry: Records, db: AsyncSession = Depends(get_db), current_us
             detail="Failed to create record"
         )
 
-# Update a CRM entry
+# Update a CRM record
 @app.put("/crm/{crm_id}")
 async def update_crm(crm_id: int, crm_update: Records, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
     try:
@@ -236,3 +254,4 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+    

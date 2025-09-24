@@ -8,9 +8,9 @@ class RecordsDB(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
-    email = Column(String, nullable=False)
-    phone_number = Column(String, nullable=False)
-    organization = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
+    organization = Column(String, nullable=True)
     description = Column(String, nullable=True)
     status = Column(String, nullable=False)
     

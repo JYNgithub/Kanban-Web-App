@@ -170,13 +170,13 @@
       </div>
     </section>
 
-    <!-- HTML logic: Global drag loading indicator -->
+    <!-- HTML logic: Loading indicator when updating record status -->
     <div v-if="dragLoading" class="global-loading-indicator">
       <div class="global-loading-spinner"></div>
       <span>Updating status...</span>
     </div>
 
-    <!-- HTML logic: Modal form for add records -->
+    <!-- HTML logic: Modal form to add records -->
     <div v-if="showAddModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <!-- Add loading overlay inside modal -->
@@ -207,39 +207,36 @@
             </div>
             
             <div class="form-group">
-              <label for="email">Email *</label>
+              <label for="email">Email</label>
               <input 
                 type="email" 
                 id="email"
                 v-model="email" 
                 placeholder="Enter email address"
-                required
                 :disabled="loading"
                 autocomplete="off"
               >
             </div>
             
             <div class="form-group">
-              <label for="phone">Phone Number *</label>
+              <label for="phone">Phone Number</label>
               <input 
                 type="tel" 
                 id="phone"
                 v-model="phone_number" 
                 placeholder="Enter phone number"
-                required
                 :disabled="loading"
                 autocomplete="off"
               >
             </div>
             
             <div class="form-group">
-              <label for="organization">Organization *</label>
+              <label for="organization">Organization</label>
               <input 
                 type="text" 
                 id="organization"
                 v-model="organization" 
                 placeholder="Enter organization name"
-                required
                 :disabled="loading"
                 autocomplete="off"
               >
@@ -291,7 +288,7 @@
       </div>
     </div>
 
-    <!-- HTML logic: Record Details Modal -->
+    <!-- HTML logic: Popup to show record details -->
     <div v-if="showRecordDetails" class="modal-overlay" @click="closeRecordDetails">
       <div class="modal-content record-details-modal" @click.stop>
         <div class="modal-header">
@@ -362,7 +359,6 @@ const showAddModal = ref(false)
 const showRecordDetails = ref(false)
 const selectedRecord = ref({})
 
-// Computed properties to filter records by status
 const newRecords = computed({
   get() {
     return records.value.filter(r => r.status === 'New')
