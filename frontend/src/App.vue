@@ -420,7 +420,7 @@ const fetchRecords = async () => {
 }
 
 const addRecord = async () => {
-  if (!name.value || !email.value || !phone_number.value || !organization.value || !status.value) return
+  if (!name.value || !status.value) return
   
   loading.value = true
   errorMsg.value = '' // Clear any previous errors

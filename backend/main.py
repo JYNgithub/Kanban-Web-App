@@ -249,7 +249,7 @@ async def update_crm(crm_id: int, crm_update: Records, db: AsyncSession = Depend
 # Health check endpoint
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.utcnow()}
+    return {"status": "healthy", "timestamp": datetime()}
 
 if __name__ == "__main__":
     import uvicorn
