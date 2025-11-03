@@ -201,8 +201,7 @@ async def get_crm(db: AsyncSession = Depends(get_db), current_user = Depends(get
 async def add_crm(entry: Records, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         user_id = current_user["user_id"]
-        # Override the user_id from token (don't trust frontend)
-        entry_data = entry.model_dump()
+        entry_data = entry.model_dump() # Override the user_id from token (don't trust frontend)
         entry_data["user_id"] = user_id
         db_entry = RecordsDB(**entry_data)
         db.add(db_entry)
@@ -249,7 +248,7 @@ async def update_crm(crm_id: int, crm_update: Records, db: AsyncSession = Depend
 # Health check endpoint
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime()}
+    return {"status": "healthy", "timestamp": datetime.utcnow()}
 
 if __name__ == "__main__":
     import uvicorn

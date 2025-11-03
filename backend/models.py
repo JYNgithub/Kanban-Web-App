@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from database import Base
 
@@ -8,6 +8,7 @@ class RecordsDB(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
+    revenue = Column(Numeric(20, 2), nullable=True)
     email = Column(String, nullable=True)
     phone_number = Column(String, nullable=True)
     organization = Column(String, nullable=True)

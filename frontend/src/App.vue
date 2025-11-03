@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <header class="app-header">
-      <h1 class="app-title">CRM Kanban Board</h1>
+      <h1 class="app-title">CRM</h1>
     </header>
 
     <!-- Action Section -->
@@ -54,8 +54,11 @@
                   <div class="card-glow"></div>
                   <div class="record-content">
                     <div class="record-name">{{ element.name }}</div>
-                    <div class="record-phone">{{ element.phone_number }}</div>
-                    <div class="record-status new-status">New</div>
+                    <div v-if="element.revenue" class="record-revenue">RM {{ element.revenue }}</div>
+                    <div v-else class="record-placeholder">-</div>
+                    <div v-if="element.email" class="record-email">{{ element.email }}</div>
+                    <div v-else-if="element.phone_number" class="record-phone">{{ element.phone_number }}</div>
+                    <div v-else class="record-placeholder">-</div>
                   </div>
                   <div class="drag-handle" @click.stop>⋮⋮</div>
                   <div v-if="dragLoading && element.id === currentlyDraggingId" class="drag-loading-overlay">
@@ -102,8 +105,11 @@
                   <div class="card-glow"></div>
                   <div class="record-content">
                     <div class="record-name">{{ element.name }}</div>
-                    <div class="record-phone">{{ element.phone_number }}</div>
-                    <div class="record-status active-status">Active</div>
+                    <div v-if="element.revenue" class="record-revenue">RM {{ element.revenue }}</div>
+                    <div v-else class="record-placeholder">-</div>
+                    <div v-if="element.email" class="record-email">{{ element.email }}</div>
+                    <div v-else-if="element.phone_number" class="record-phone">{{ element.phone_number }}</div>
+                    <div v-else class="record-placeholder">-</div>
                   </div>
                   <div class="drag-handle" @click.stop>⋮⋮</div>
                   <div v-if="dragLoading && element.id === currentlyDraggingId" class="drag-loading-overlay">
@@ -150,8 +156,11 @@
                   <div class="card-glow"></div>
                   <div class="record-content">
                     <div class="record-name">{{ element.name }}</div>
-                    <div class="record-phone">{{ element.phone_number }}</div>
-                    <div class="record-status closed-status">Closed</div>
+                    <div v-if="element.revenue" class="record-revenue">RM {{ element.revenue }}</div>
+                    <div v-else class="record-placeholder">-</div>
+                    <div v-if="element.email" class="record-email">{{ element.email }}</div>
+                    <div v-else-if="element.phone_number" class="record-phone">{{ element.phone_number }}</div>
+                    <div v-else class="record-placeholder">-</div>
                   </div>
                   <div class="drag-handle" @click.stop>⋮⋮</div>
                   <div v-if="dragLoading && element.id === currentlyDraggingId" class="drag-loading-overlay">
@@ -201,6 +210,20 @@
                 v-model="name" 
                 placeholder="Enter full name"
                 required
+                :disabled="loading"
+                autocomplete="off"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="revenue">Revenue</label>
+              <input 
+                type="number" 
+                id="revenue"
+                v-model.number="revenue" 
+                placeholder="Enter revenue amount"
+                step="0.01"
+                min="0"
                 :disabled="loading"
                 autocomplete="off"
               >
@@ -301,6 +324,13 @@
             <span class="detail-label">Name:</span>
             <span class="detail-value">{{ selectedRecord.name }}</span>
           </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Revenue:</span>
+            <span class="detail-value">
+              {{ Number(selectedRecord.revenue).toFixed(2) }}
+            </span>
+          </div>
           
           <div class="detail-row">
             <span class="detail-label">Email:</span>
@@ -344,6 +374,7 @@ import Draggable from 'vuedraggable'
 const API_URL = 'http://127.0.0.1:8000'
 
 const name = ref('')
+const revenue = ref(null)
 const email = ref('')
 const phone_number = ref('')
 const organization = ref('')
@@ -351,7 +382,7 @@ const description = ref('')
 const status = ref('')
 const records = ref([])
 const successMsg = ref('')
-const errorMsg = ref('') // Add error message ref
+const errorMsg = ref('')
 const loading = ref(false)
 const dragLoading = ref(false)
 const currentlyDraggingId = ref(null)
@@ -420,6 +451,7 @@ const fetchRecords = async () => {
 }
 
 const addRecord = async () => {
+  // Checks that requried fields are filled
   if (!name.value || !status.value) return
   
   loading.value = true
@@ -429,8 +461,9 @@ const addRecord = async () => {
     const token = localStorage.getItem('access_token')
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
     await axios.post(`${API_URL}/crm`, {
-      user_id: 1,
+      // user_id is handled by backend
       name: name.value,
+      revenue: revenue.value,
       email: email.value,
       phone_number: phone_number.value,
       organization: organization.value,
@@ -443,6 +476,7 @@ const addRecord = async () => {
     
     // Clear form
     name.value = ''
+    revenue.value = ''
     email.value = ''
     phone_number.value = ''
     organization.value = ''
@@ -1138,18 +1172,33 @@ body {
   line-height: 1.4;
 }
 
+.record-revenue {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: #f8fafc;
+  line-height: 1.4;
+}
+
 .record-phone {
   font-size: 0.95rem;
   margin-bottom: 10px;
   color: #94a3b8;
+  font-style: italic;
 }
 
-.record-status {
-  display: inline-block;
-  padding: 4px 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  border-radius: 20px;
+.record-email {
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.record-placeholder {
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  color: #94a3b8;
+  opacity: 0;
 }
 
 .new-status {
