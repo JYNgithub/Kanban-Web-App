@@ -197,7 +197,7 @@ async def get_crm(db: AsyncSession = Depends(get_db), current_user = Depends(get
         )
 
 # Add a new CRM record
-@app.post("/crm", status_code=status.HTTP_201_CREATED)
+@app.post("/crm")
 async def add_crm(entry: Records, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         user_id = current_user["user_id"]
@@ -243,6 +243,32 @@ async def update_crm(crm_id: int, crm_update: Records, db: AsyncSession = Depend
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update record"
+        )
+
+# Delete a CRM record
+@app.delete("/crm/{record_id}")
+async def delete_crm(record_id: int, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
+    try:
+        user_id = current_user["user_id"]
+        stmt = select(RecordsDB).where(
+            RecordsDB.id == record_id,
+            RecordsDB.user_id == user_id
+        )
+        result = await db.execute(stmt)
+        record = result.scalar_one_or_none()
+        if record is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Record not found"
+            )
+        await db.delete(record)
+        await db.commit()
+    except Exception as e:
+        logger.error(f"Error deleting CRM entry: {e}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete record"
         )
 
 # Health check endpoint

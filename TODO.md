@@ -1,5 +1,4 @@
 # TODO
-- [ ] Delete records
 - [ ] Edit records
 - [ ] Add Google login
 - [ ] Add Forgotten Password 
@@ -16,4 +15,5 @@
 - Consider to do checking + using UUID instead
 
 # Completed
+- [x] Delete records
 - [x] Add expected revenue to records

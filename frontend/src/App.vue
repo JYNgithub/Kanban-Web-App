@@ -318,7 +318,6 @@
           <h2>Record Details</h2>
           <button @click="closeRecordDetails" class="close-btn">&times;</button>
         </div>
-        
         <div class="record-details-content">
           <div class="detail-row">
             <span class="detail-label">Name:</span>
@@ -361,6 +360,20 @@
             <span class="detail-value">{{ selectedRecord.description }}</span>
           </div>
         </div>
+        <div class="modal-footer">
+          <button class="delete-btn" @click="requestDelete">
+            Delete
+          </button>
+        </div>
+        <div v-if="showConfirmDelete" class="confirm-overlay" @click="cancelDelete">
+          <div class="confirm-box" @click.stop>
+            <p>Are you sure you want to delete this record?</p>
+            <div class="confirm-actions">
+              <button class="confirm-yes" @click="confirmDelete">Yes</button>
+              <button class="confirm-no" @click="cancelDelete">No</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -371,8 +384,10 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import axios from 'axios'
 import Draggable from 'vuedraggable'
 
+// Backend API URL
 const API_URL = 'http://127.0.0.1:8000'
 
+// Form/Record fields
 const name = ref('')
 const revenue = ref(null)
 const email = ref('')
@@ -381,6 +396,8 @@ const organization = ref('')
 const description = ref('')
 const status = ref('')
 const records = ref([])
+
+// UI State
 const successMsg = ref('')
 const errorMsg = ref('')
 const loading = ref(false)
@@ -389,7 +406,9 @@ const currentlyDraggingId = ref(null)
 const showAddModal = ref(false)
 const showRecordDetails = ref(false)
 const selectedRecord = ref({})
+const showConfirmDelete = ref(false)
 
+// Group records by status
 const newRecords = computed({
   get() {
     return records.value.filter(r => r.status === 'New')
@@ -399,7 +418,6 @@ const newRecords = computed({
     records.value = [...others, ...newRecords]
   }
 })
-
 const activeRecords = computed({
   get() {
     return records.value.filter(r => r.status === 'Active')
@@ -409,7 +427,6 @@ const activeRecords = computed({
     records.value = [...others, ...newRecords]
   }
 })
-
 const closedRecords = computed({
   get() {
     return records.value.filter(r => r.status === 'Closed')
@@ -420,24 +437,7 @@ const closedRecords = computed({
   }
 })
 
-const checkHorizontalScroll = () => {
-  nextTick(() => {
-    const container = document.querySelector('.container')
-    const body = document.body
-    if (container) {
-      const containerWidth = container.scrollWidth
-      const viewportWidth = window.innerWidth
-      if (containerWidth > viewportWidth) {
-        body.style.overflowX = 'auto'
-        body.style.minWidth = containerWidth + 'px'
-      } else {
-        body.style.overflowX = 'hidden'
-        body.style.minWidth = '100vw'
-      }
-    }
-  })
-}
-
+// API interactions
 const fetchRecords = async () => {
   try {
     const token = localStorage.getItem('access_token')
@@ -449,7 +449,6 @@ const fetchRecords = async () => {
     console.error('Error fetching records:', err)
   }
 }
-
 const addRecord = async () => {
   // Checks that requried fields are filled
   if (!name.value || !status.value) return
@@ -493,7 +492,33 @@ const addRecord = async () => {
     loading.value = false
   }
 }
+const deleteRecord = async (recordId) => {
+  try {
+    const token = localStorage.getItem('access_token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
+    await axios.delete(`${API_URL}/crm/${recordId}`, { headers })
+
+    await fetchRecords() // refresh list
+  } catch (err) {
+    console.error('Error deleting record:', err)
+  }
+}
+
+// Confirmation for record deletion
+const requestDelete = () => {
+  showConfirmDelete.value = true
+}
+const confirmDelete = async () => {
+  await deleteRecord(selectedRecord.value.id)
+  showConfirmDelete.value = false
+  showRecordDetails.value = false
+}
+const cancelDelete = () => {
+  showConfirmDelete.value = false
+}
+
+// UI behaviour
 const closeModal = () => {
   if (loading.value) return // Prevent closing while loading
   
@@ -501,17 +526,15 @@ const closeModal = () => {
   successMsg.value = ''
   errorMsg.value = ''
 }
-
 const openRecordDetails = (record) => {
   selectedRecord.value = { ...record }
   showRecordDetails.value = true
 }
-
 const closeRecordDetails = () => {
   showRecordDetails.value = false
+  showConfirmDelete.value = false
   selectedRecord.value = {}
 }
-
 const getStatusClass = (status) => {
   switch (status) {
     case 'New': return 'new-status'
@@ -520,7 +543,23 @@ const getStatusClass = (status) => {
     default: return ''
   }
 }
-
+const checkHorizontalScroll = () => {
+  nextTick(() => {
+    const container = document.querySelector('.container')
+    const body = document.body
+    if (container) {
+      const containerWidth = container.scrollWidth
+      const viewportWidth = window.innerWidth
+      if (containerWidth > viewportWidth) {
+        body.style.overflowX = 'auto'
+        body.style.minWidth = containerWidth + 'px'
+      } else {
+        body.style.overflowX = 'hidden'
+        body.style.minWidth = '100vw'
+      }
+    }
+  })
+}
 const onDrop = async (newStatus, evt) => {
   if (evt.added) {
     const record = evt.added.element
@@ -554,15 +593,16 @@ const onDrop = async (newStatus, evt) => {
   }
 }
 
+// Page opening and closing behaviour
 onMounted(() => {
   fetchRecords()
   checkHorizontalScroll()
   window.addEventListener('resize', checkHorizontalScroll)
 })
-
 onUnmounted(() => {
   window.removeEventListener('resize', checkHorizontalScroll)
 })
+
 </script>
 
 <style>
@@ -1200,6 +1240,82 @@ body {
   color: #94a3b8;
   opacity: 0;
 }
+
+.modal-footer {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+}
+
+.delete-btn {
+  padding: 10px 18px;
+  background: transparent;
+  color: #d9534f;
+  border: 2px solid #d9534f;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.delete-btn:hover {
+  background: rgba(217, 83, 79, 0.1);
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.confirm-box {
+  background: rgba(15, 23, 42, 0.95);
+  color: #fff;
+  padding: 22px;
+  border-radius: 10px;
+  width: 300px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.confirm-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.confirm-yes {
+  padding: 8px 16px;
+  background: transparent;
+  border: 2px solid #d9534f;
+  color: #d9534f;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.confirm-no {
+  padding: 8px 16px;
+  background: transparent;
+  border: 2px solid #888;
+  color: #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.confirm-yes:hover {
+  background: rgba(217, 83, 79, 0.15);
+}
+
+.confirm-no:hover {
+  background: rgba(255,255,255,0.1);
+}
+
 
 .new-status {
   color: #fce21b;
