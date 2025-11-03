@@ -217,12 +217,12 @@ async def add_crm(entry: Records, db: AsyncSession = Depends(get_db), current_us
         )
 
 # Update a CRM record
-@app.put("/crm/{crm_id}")
-async def update_crm(crm_id: int, crm_update: Records, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
+@app.put("/crm/{record_id}")
+async def update_crm(record_id: int, crm_update: Records, db: AsyncSession = Depends(get_db), current_user = Depends(get_current_user)):
     try:
         user_id = current_user["user_id"]
         # Only allow users to update their own records
-        result = await db.execute(select(RecordsDB).where(RecordsDB.id == crm_id, RecordsDB.user_id == user_id))
+        result = await db.execute(select(RecordsDB).where(RecordsDB.id == record_id, RecordsDB.user_id == user_id))
         db_entry = result.scalars().first()
         
         if not db_entry:
